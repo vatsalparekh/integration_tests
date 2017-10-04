@@ -791,18 +791,8 @@ def test_user_change_password(appliance, request):
 
 # Tenant/Project test cases
 
-@pytest.fixture(scope="module")
-def tenantcollection(appliance):
-    yield TenantCollection(appliance=appliance)
-
-
-@pytest.fixture(scope="module")
-def projectcollection(appliance):
-    yield ProjectCollection(appliance=appliance)
-
-
 @pytest.mark.tier(3)
-def test_superadmin_tenant_crud(request, tenantcollection):
+def test_superadmin_tenant_crud(request, appliance):
     """Test suppose to verify CRUD operations for CFME tenants
 
     Prerequisities:
@@ -814,10 +804,11 @@ def test_superadmin_tenant_crud(request, tenantcollection):
         * Update name of tenat
         * Delete tenant
     """
-    tenant = tenantcollection.create(
+    tc = TenantCollection(appliance=appliance)
+    tenant = tc.create(
         name='tenant1' + fauxfactory.gen_alphanumeric(),
         description='tenant1 description',
-        parent=tenantcollection.get_root_tenant())
+        parent=tc.get_root_tenant())
 
     @request.addfinalizer
     def _delete_tenant():
@@ -833,7 +824,7 @@ def test_superadmin_tenant_crud(request, tenantcollection):
 
 @pytest.mark.tier(3)
 @pytest.mark.meta(blockers=[BZ(1387088, forced_streams=['5.7', 'upstream'])])
-def test_superadmin_tenant_project_crud(request, tenantcollection, projectcollection):
+def test_superadmin_tenant_project_crud(request, appliance):
     """Test suppose to verify CRUD operations for CFME projects
 
     Prerequisities:
@@ -847,12 +838,14 @@ def test_superadmin_tenant_project_crud(request, tenantcollection, projectcollec
         * Delete project
         * Delete tenant
     """
-    tenant = tenantcollection.create(
+    tc = TenantCollection(appliance=appliance)
+    pc = ProjectCollection(appliance=appliance)
+    tenant = tc.create(
         name='tenant1' + fauxfactory.gen_alphanumeric(),
         description='tenant1 description',
-        parent=tenantcollection.get_root_tenant())
+        parent=tc.get_root_tenant())
 
-    project = projectcollection.create(
+    project = pc.create(
         name='project1' + fauxfactory.gen_alphanumeric(),
         description='project1 description',
         parent=tenant)
@@ -873,7 +866,7 @@ def test_superadmin_tenant_project_crud(request, tenantcollection, projectcollec
 
 @pytest.mark.tier(3)
 @pytest.mark.parametrize('number_of_childrens', [5])
-def test_superadmin_child_tenant_crud(request, tenantcollection, number_of_childrens):
+def test_superadmin_child_tenant_crud(request, appliance, number_of_childrens):
     """Test CRUD operations for CFME child tenants, where several levels of tenants are created.
 
     Prerequisities:
@@ -885,8 +878,8 @@ def test_superadmin_child_tenant_crud(request, tenantcollection, number_of_child
         * Update name of tenant(N-1)_*
         * Delete all created tenants in reversed order
     """
-
-    tenant = tenantcollection.get_root_tenant()
+    tc = TenantCollection(appliance=appliance)
+    tenant = tc.get_root_tenant()
     tenant_list = []
 
     @request.addfinalizer
@@ -897,7 +890,7 @@ def test_superadmin_child_tenant_crud(request, tenantcollection, number_of_child
                 tenant.delete()
 
     for i in range(1, number_of_childrens + 1):
-        new_tenant = tenantcollection.create(
+        new_tenant = tc.create(
             name="tenant{}_{}".format(i, fauxfactory.gen_alpha(4)),
             description=fauxfactory.gen_alphanumeric(16),
             parent=tenant)
@@ -956,10 +949,10 @@ def tenant_unique_tenant_project_name_on_parent_level(request, object_type):
 
 
 @pytest.mark.tier(3)
-def test_unique_tenant_name_on_parent_level(request, tenantcollection):
-    tenant_unique_tenant_project_name_on_parent_level(request, tenantcollection)
+def test_unique_tenant_name_on_parent_level(request, appliance):
+    tenant_unique_tenant_project_name_on_parent_level(request, TenantCollection(appliance=appliance))
 
 
 @pytest.mark.tier(3)
-def test_unique_project_name_on_parent_level(request, projectcollection):
-    tenant_unique_tenant_project_name_on_parent_level(request, projectcollection)
+def test_unique_project_name_on_parent_level(request, appliance):
+    tenant_unique_tenant_project_name_on_parent_level(request, ProjectCollection(appliance=appliance))

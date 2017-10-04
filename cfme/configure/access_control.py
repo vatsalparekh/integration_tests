@@ -1486,8 +1486,13 @@ class TenantManageQuotas(CFMENavigateStep):
 class ProjectCollection(TenantCollection):
     """Collection class for Projects under Tenants"""
 
-    def instantiate(self, name, description=None, parent=None):
+    def instantiate(self, name, description=None, parent=None, default=False):
         return Project(collection=self, name=name, description=description, parent_tenant=parent)
+
+    def get_root_tenant(self):
+        # returning Tenant directly because 'My Company' needs to be treated like Tenant object,
+        # to be able to make child tenant/project under it
+        return Tenant(collection=self, name='My Company', _default=True)
 
     def create(self, name, description, parent):
         project = self.instantiate(name, description, parent)
